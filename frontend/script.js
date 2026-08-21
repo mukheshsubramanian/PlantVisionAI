@@ -751,11 +751,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (otpDeliveryHint) {
         if (data.is_real_delivery) {
-          otpDeliveryHint.innerHTML = `A secure 6-digit verification code was sent directly to <strong>${data.target}</strong>. Please check your inbox (including Spam/Junk folder) and enter the code below.`;
+          otpDeliveryHint.innerHTML = `✅ <strong>Inbox Dispatched:</strong> A secure 6-digit verification code was sent directly to <strong>${data.target}</strong>. Please check your inbox (including Spam/Junk folder) and enter the code below.`;
         } else if (data.target_type === "sms") {
-          otpDeliveryHint.innerHTML = `A secure 6-digit verification code has been dispatched to <strong>${data.target}</strong> via SMS. Only the mobile recipient can access this code.`;
+          otpDeliveryHint.innerHTML = `📱 <strong>SMS Gateway Notice:</strong> Real SMS requires Twilio configured in <code>backend/.env</code>. Passcode has been generated for <strong>${data.target}</strong>.`;
         } else {
-          otpDeliveryHint.innerHTML = `A secure 6-digit verification code has been dispatched to <strong>${data.target}</strong>. Please check your email inbox to retrieve your code.`;
+          otpDeliveryHint.innerHTML = `⚠️ <strong>SMTP Setup Required:</strong> To receive actual emails in your Gmail inbox, configure your Gmail address & App Password in <code>backend/.env</code>.`;
         }
       }
 
@@ -770,8 +770,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       startResendCountdown();
-      showToast(data.message || `Verification OTP sent to ${data.target || identifier}!`, "success");
-      showAuthAlert(data.message || `Verification code sent to ${data.target}. Please enter the 6-digit OTP received in your inbox.`, true);
+      showToast(data.message || `Verification OTP sent to ${data.target || identifier}!`, data.is_real_delivery ? "success" : "info");
+      if (data.is_real_delivery) {
+        showAuthAlert(`✅ Verification code sent directly to your inbox (${data.target}). Enter the 6-digit code below.`, true);
+      } else {
+        showAuthAlert(`Verification code dispatched for ${data.target}. Enter your 6-digit OTP below to proceed.`, true);
+      }
 
     } catch (err) {
       if (isResend) {
@@ -828,15 +832,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (autoFillOtpBtn) {
-    autoFillOtpBtn.addEventListener("click", () => {
-      if (activeOtpCode && resetOtpInput) {
-        resetOtpInput.value = activeOtpCode;
-        showToast("OTP passcode auto-filled! 🔑", "info");
-        if (resetNewPasswordInput) resetNewPasswordInput.focus();
-      }
-    });
-  }
+
 
   // Format OTP input to only allow 6 numbers and auto-advance
   if (resetOtpInput) {
@@ -848,26 +844,35 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function openForgotPassword() {
+    hideAuthAlert();
+    if (loginIdentifierInput && loginIdentifierInput.value.trim() && resetIdentifierInput) {
+      resetIdentifierInput.value = loginIdentifierInput.value.trim();
+      if (loginIdentifierInput.value.includes("@")) {
+        setOtpChannel("email");
+      } else if (/^\+?[0-9\s\-()]+$/.test(loginIdentifierInput.value.trim()) && loginIdentifierInput.value.trim().length >= 7) {
+        setOtpChannel("sms");
+      }
+    }
+    switchAuthTab("reset");
+    if (resetIdentifierInput) {
+      setTimeout(() => resetIdentifierInput.focus(), 100);
+    }
+  }
+
+  window.openForgotPassword = openForgotPassword;
+  window.switchAuthTab = switchAuthTab;
+
   if (forgotPasswordLink) {
-    forgotPasswordLink.addEventListener("click", () => {
-      hideAuthAlert();
-      if (loginIdentifierInput && loginIdentifierInput.value.trim() && resetIdentifierInput) {
-        resetIdentifierInput.value = loginIdentifierInput.value.trim();
-        if (loginIdentifierInput.value.includes("@")) {
-          setOtpChannel("email");
-        } else if (/^\+?[0-9\s\-()]+$/.test(loginIdentifierInput.value.trim()) && loginIdentifierInput.value.trim().length >= 7) {
-          setOtpChannel("sms");
-        }
-      }
-      switchAuthTab("reset");
-      if (resetIdentifierInput) {
-        resetIdentifierInput.focus();
-      }
+    forgotPasswordLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      openForgotPassword();
     });
   }
 
   if (backToLoginBtn) {
-    backToLoginBtn.addEventListener("click", () => {
+    backToLoginBtn.addEventListener("click", (e) => {
+      e.preventDefault();
       hideAuthAlert();
       if (resendTimerInterval) {
         clearInterval(resendTimerInterval);

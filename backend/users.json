@@ -26,16 +26,6 @@
     "password_hash": "502cb14087e2a05ee7d8feacb579bfe86b7ab9cef9fdb7cb51a9b1331c3305e5",
     "created_at": "2026-08-21 09:41:15"
   },
-  "user_1787286813218_f1edb0ac": {
-    "id": "user_1787286813218_f1edb0ac",
-    "username": "farmer_john",
-    "email": "john@greenvalleys.org",
-    "full_name": "John Henderson",
-    "phone": null,
-    "salt": "b5197af87579316d194127bf931db21f",
-    "password_hash": "bb9218d4616f07b4a344451afdef1d8c8573d20060c90f0f7e0e23dfe7329d48",
-    "created_at": "2026-08-21 10:03:33"
-  },
   "user_1787292109045_55563621": {
     "id": "user_1787292109045_55563621",
     "username": "demo_agronomist",
@@ -55,5 +45,15 @@
     "salt": "1c169a9291b201a6bf8f8ec92e0d7ca3",
     "password_hash": "254c2075d9ac52f109972dcc53d8656e3e61f624cd2ee48dd5301445a7137a14",
     "created_at": "2026-08-21 11:31:49"
+  },
+  "user_1787294596484_c0fb8a83": {
+    "id": "user_1787294596484_c0fb8a83",
+    "username": "farmer_john",
+    "email": "john@greenvalleys.org",
+    "full_name": "John Henderson",
+    "phone": null,
+    "salt": "81cd646db61593786a35b2429490708f",
+    "password_hash": "2e8bc12e15ff02d51e2b4d8ede27037ec5483e0916a4f1057eab0ba03e20d859",
+    "created_at": "2026-08-21 12:13:16"
   }
 }

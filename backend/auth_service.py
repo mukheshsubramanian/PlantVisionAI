@@ -25,18 +25,26 @@ USERS_FILE = BASE_DIR / "backend" / "users.json"
 SESSIONS_FILE = BASE_DIR / "backend" / "sessions.json"
 OTPS_FILE = BASE_DIR / "backend" / "otps.json"
 
-# Load backend/.env if present
+# Load backend/.env helper function
 ENV_FILE = BASE_DIR / "backend" / ".env"
-if ENV_FILE.exists():
-    try:
-        with open(ENV_FILE, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    k, v = line.split("=", 1)
-                    os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
-    except Exception as e:
-        logger.warning(f"Error loading .env file: {e}")
+
+def _load_env_file():
+    if ENV_FILE.exists():
+        try:
+            with open(ENV_FILE, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        val = v.strip().strip('"').strip("'")
+                        if val:  # only set non-empty values
+                            os.environ[k.strip()] = val
+                        elif k.strip() in os.environ and not val:
+                            del os.environ[k.strip()]
+        except Exception as e:
+            logger.warning(f"Error loading .env file: {e}")
+
+_load_env_file()
 
 
 class UserRegisterRequest(BaseModel):
@@ -302,6 +310,7 @@ class AuthService:
         Attempts to dispatch a real email using configured SMTP settings (e.g. Gmail / SendGrid / Custom SMTP).
         If SMTP credentials are not configured in backend/.env, returns simulated delivery status.
         """
+        _load_env_file()
         smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
         try:
             smtp_port = int(os.environ.get("SMTP_PORT", "587"))
@@ -406,6 +415,7 @@ The PlantVision AI Agronomy Team
         """
         Attempts to dispatch SMS via Twilio if credentials are configured in .env.
         """
+        _load_env_file()
         twilio_sid = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
         twilio_token = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
         twilio_from = os.environ.get("TWILIO_PHONE_NUMBER", "").strip()
