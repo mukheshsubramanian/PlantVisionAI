@@ -1,0 +1,59 @@
+{
+  "user_1787200467492_02a15c59": {
+    "id": "user_1787200467492_02a15c59",
+    "username": "mukhesh24",
+    "email": "mukheshsubramaian@gmail.com",
+    "full_name": "mukhesh",
+    "salt": "47039f33ba5d906025385a087d4c9efd",
+    "password_hash": "3e686c2d4cb9c400c483bbe23620c939fac4c3b0d2e43ce12a8b3e2b681b109e",
+    "created_at": "2026-08-20 10:04:27"
+  },
+  "user_1787218567873_74f62830": {
+    "id": "user_1787218567873_74f62830",
+    "username": "mukhesh23",
+    "email": "mukheshsubramanian@gmail.com",
+    "full_name": "mukhesh",
+    "salt": "88fd0ebd909c3ad680c5a9f91d38d45e",
+    "password_hash": "178e5abb2f17a216c53acbe6030ae9871cce67c5a92708a8c423f19345473dfb",
+    "created_at": "2026-08-20 15:06:07"
+  },
+  "user_1787285475017_c8dbbcea": {
+    "id": "user_1787285475017_c8dbbcea",
+    "username": "kumar81",
+    "email": "manir79129@gmail.com",
+    "full_name": "kumar",
+    "salt": "b34f3a84b113457b4b3887168c353e00",
+    "password_hash": "502cb14087e2a05ee7d8feacb579bfe86b7ab9cef9fdb7cb51a9b1331c3305e5",
+    "created_at": "2026-08-21 09:41:15"
+  },
+  "user_1787286813218_f1edb0ac": {
+    "id": "user_1787286813218_f1edb0ac",
+    "username": "farmer_john",
+    "email": "john@greenvalleys.org",
+    "full_name": "John Henderson",
+    "phone": null,
+    "salt": "b5197af87579316d194127bf931db21f",
+    "password_hash": "bb9218d4616f07b4a344451afdef1d8c8573d20060c90f0f7e0e23dfe7329d48",
+    "created_at": "2026-08-21 10:03:33"
+  },
+  "user_1787292109045_55563621": {
+    "id": "user_1787292109045_55563621",
+    "username": "demo_agronomist",
+    "email": "agronomist@plantvision.ai",
+    "full_name": "Dr. Elena Green",
+    "phone": null,
+    "salt": "dc2ec6bf5b6c4aecbee311ee25b67387",
+    "password_hash": "08bc622715041937976b261e8d2917bd843c05402cacb01831ec7cc5bfb1bd79",
+    "created_at": "2026-08-21 11:31:49"
+  },
+  "user_1787292109058_abdf4be4": {
+    "id": "user_1787292109058_abdf4be4",
+    "username": "farmer_otp",
+    "email": "farmer_otp@plantvision.ai",
+    "full_name": "Farmer Joe",
+    "phone": "+1 (555) 234-5678",
+    "salt": "1c169a9291b201a6bf8f8ec92e0d7ca3",
+    "password_hash": "254c2075d9ac52f109972dcc53d8656e3e61f624cd2ee48dd5301445a7137a14",
+    "created_at": "2026-08-21 11:31:49"
+  }
+}

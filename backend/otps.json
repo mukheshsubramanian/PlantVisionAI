@@ -1,0 +1,22 @@
+{
+  "farmer_john": {
+    "otp": "935434",
+    "user_id": "user_1787286813218_f1edb0ac",
+    "target": "john@greenvalleys.org",
+    "target_type": "email",
+    "masked_target": "jo***n@greenvalleys.org",
+    "expires_at": 1787294183.6798744,
+    "created_at": 1787293583.6798763,
+    "verified": false
+  },
+  "john@greenvalleys.org": {
+    "otp": "935434",
+    "user_id": "user_1787286813218_f1edb0ac",
+    "target": "john@greenvalleys.org",
+    "target_type": "email",
+    "masked_target": "jo***n@greenvalleys.org",
+    "expires_at": 1787294183.6798744,
+    "created_at": 1787293583.6798763,
+    "verified": false
+  }
+}
