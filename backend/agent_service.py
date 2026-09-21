@@ -40,6 +40,21 @@ class PlantHealthAgent:
                 logger.error(f"Failed to load disease_info: {e}")
         return {}
 
+    @staticmethod
+    def _contains_keyword(text: str, *keywords: str) -> bool:
+        """Accurate keyword matching with word boundaries to avoid false substring matches."""
+        for kw in keywords:
+            kw_clean = kw.strip().lower()
+            if not kw_clean:
+                continue
+            if " " in kw_clean or "-" in kw_clean:
+                if kw_clean in text:
+                    return True
+            else:
+                if re.search(r"\b" + re.escape(kw_clean) + r"\b", text):
+                    return True
+        return False
+
     def generate_response(
         self,
         question: str,
@@ -50,7 +65,7 @@ class PlantHealthAgent:
         Processes a user question, incorporates current leaf scan context if available,
         and generates structured agentic guidance, actionable steps, and suggested follow-ups.
         """
-        q_raw = question.strip()
+        q_raw = question.strip() if question else ""
         q_lower = q_raw.lower()
         
         context_disease = scan_context.get("disease") if scan_context else None
@@ -70,7 +85,7 @@ class PlantHealthAgent:
             for k, info in self.disease_info.items():
                 d_name = info.get("disease_name", "").lower()
                 c_name = info.get("crop", "").lower()
-                if (c_name in q_lower and any(w in q_lower for w in ["blight", "rust", "spot", "scab", "mold", "rot", "mildew", "mosaic", "curl", "mite", "scorch"])) or d_name in q_lower:
+                if (c_name and self._contains_keyword(q_lower, c_name) and any(self._contains_keyword(q_lower, w) for w in ["blight", "rust", "spot", "scab", "mold", "rot", "mildew", "mosaic", "curl", "mite", "scorch"])) or (d_name and d_name in q_lower):
                     matched_disease_key = k
                     matched_info = info
                     break
@@ -102,11 +117,11 @@ class PlantHealthAgent:
         # =========================================================================
         # 1. "WHAT QUESTIONS CAN I ASK ABOUT A PLANT?" (Comprehensive Guide)
         # =========================================================================
-        if any(term in q_lower for term in [
+        if self._contains_keyword(q_lower, 
             "what are the question", "what questions", "what can i ask", "how to ask",
             "questions we ask", "questions to ask", "help", "guide", "what should i ask",
             "example questions", "list questions", "topics", "options"
-        ]):
+        ):
             answer = (
                 f"🌿 **Hello! I am your AI Agronomist & Botanical Doctor.** You can speak or chat with me about *any* aspect of plant care, gardening, and crop health!\n\n"
                 f"Here are the most valuable and common questions you can ask me:\n\n"
@@ -168,7 +183,7 @@ class PlantHealthAgent:
             ]
 
         # 2.1 Gratitude & Kindness
-        elif any(term in q_lower for term in ["thank you", "thanks", "appreciate", "helpful", "awesome", "great job", "you are the best", "you are awesome"]):
+        elif self._contains_keyword(q_lower, "thank you", "thanks", "appreciate", "helpful", "awesome", "great job", "you are the best", "you are awesome"):
             answer = (
                 f"🌱 **You are so very welcome!** It truly makes my day to help you and your plants flourish.\n\n"
                 f"Gardening is both a science and a labor of love. Every leaf you nurture makes the world greener! If you ever notice any new spots, wilting, or need feeding tips, I'm always right here for you.\n\n"
@@ -181,7 +196,7 @@ class PlantHealthAgent:
             ]
 
         # 2.2 Identity & Assistant Bio
-        elif any(term in q_lower for term in ["who are you", "what are you", "what can you do", "tell me about yourself", "your name"]):
+        elif self._contains_keyword(q_lower, "who are you", "what are you", "what can you do", "tell me about yourself", "your name"):
             answer = (
                 f"🌿 **I am PlantVision AI**—your dedicated AI Agronomist, Plant Pathologist, and Botanical Voice Companion!\n\n"
                 f"Here is how I can assist you:\n"
@@ -197,7 +212,7 @@ class PlantHealthAgent:
             ]
 
         # 2.3 General How Are You
-        elif any(term in q_lower for term in ["how are you", "how's it going", "how are you doing", "how do you feel"]):
+        elif self._contains_keyword(q_lower, "how are you", "how's it going", "how are you doing", "how do you feel"):
             answer = (
                 f"😊 **I'm doing wonderful and thriving, thank you for asking!** Just like a well-watered seedling in the morning sun, I'm fully energized and ready to help you.\n\n"
                 f"How is your garden or plant collection doing today? Are your leaves looking green and happy, or are you noticing any spots or wilting?"
@@ -211,11 +226,11 @@ class PlantHealthAgent:
         # =========================================================================
         # 3. LEAF SYMPTOMS (Yellowing, Browning, Curling, Wilting, Drooping, Spots)
         # =========================================================================
-        elif any(term in q_lower for term in [
+        elif self._contains_keyword(q_lower, 
             "yellow", "yellowing", "brown", "browning", "curl", "curling",
             "wilt", "wilting", "droop", "drooping", "spots", "black spot", "dry tip",
-            "leaf drop", "falling leaves", "dying", "sick plant", "white powder"
-        ]):
+            "leaf drop", "falling leaves", "dying", "sick plant", "white powder", "chlorosis"
+        ):
             if has_scan:
                 answer = (
                     f"🌿 **Let's diagnose what your {crop} is experiencing with {disease_name}:**\n\n"
@@ -256,10 +271,10 @@ class PlantHealthAgent:
         # =========================================================================
         # 4. WATERING, SOIL MOISTURE, DRAINAGE & ROOT ROT
         # =========================================================================
-        elif any(term in q_lower for term in [
+        elif self._contains_keyword(q_lower, 
             "water", "watering", "how often to water", "overwater", "underwater",
-            "soil", "drainage", "moisture", "root rot", "soggy", "wet soil", "dry soil"
-        ]):
+            "drainage", "moisture", "root rot", "soggy", "wet soil", "dry soil"
+        ):
             answer = (
                 f"💧 **Mastering watering is the #1 secret to healthy, disease-free plants!** Here is the complete agronomist guide for **{crop if has_scan else 'your plants'}**:\n\n"
                 f"### 📏 1. The Golden 'Finger Test' Rule\n"
@@ -286,10 +301,10 @@ class PlantHealthAgent:
         # =========================================================================
         # 5. FERTILIZER, N-P-K & PLANT NUTRITION
         # =========================================================================
-        elif any(term in q_lower for term in [
+        elif self._contains_keyword(q_lower, 
             "fertilizer", "fertilize", "feed", "feeding", "npk", "nitrogen",
-            "phosphorus", "potassium", "calcium", "magnesium", "compost", "nutrient", "yellow vein"
-        ]):
+            "phosphorus", "potassium", "calcium", "magnesium", "compost", "nutrient", "blossom end rot"
+        ):
             answer = (
                 f"🌱 **Proper plant nutrition is like a strong immune system for your crops!** Here is how to feed **{crop if has_scan else 'your garden'}** effectively:\n\n"
                 f"### 🧪 1. Understanding N-P-K Numbers\n"
@@ -313,11 +328,11 @@ class PlantHealthAgent:
         # =========================================================================
         # 6. PESTS & NATURAL INSECT CONTROL
         # =========================================================================
-        elif any(term in q_lower for term in [
+        elif self._contains_keyword(q_lower, 
             "pest", "pests", "bug", "bugs", "insect", "insects", "aphid", "aphids",
             "spider mite", "mites", "whitefly", "whiteflies", "thrips", "caterpillar",
-            "worm", "scale", "mealybug", "beetle", "slug", "snail"
-        ]):
+            "caterpillars", "worm", "scale", "mealybug", "beetle", "slug", "snail"
+        ):
             answer = (
                 f"🐛 **Let's protect your garden from pests naturally!** Here is your organic pest eradication battle plan for **{crop if has_scan else 'your crops'}**:\n\n"
                 f"### 🧼 1. Homemade Organic Insecticidal Soap Recipe\n"
@@ -343,10 +358,10 @@ class PlantHealthAgent:
         # =========================================================================
         # 7. SUNLIGHT, CLIMATE & INDOOR CARE
         # =========================================================================
-        elif any(term in q_lower for term in [
-            "sun", "sunlight", "shade", "light", "temperature", "heat", "frost",
-            "cold", "humidity", "indoor", "grow light", "scorched", "sunburn"
-        ]):
+        elif self._contains_keyword(q_lower, 
+            "sunlight", "shade", "direct sun", "temperature", "heatwave", "frost",
+            "cold", "humidity", "indoor", "grow light", "sunscald", "sunburn"
+        ):
             answer = (
                 f"☀️ **Sunlight and climate control are vital for plant energy and immune defense!** Here is the breakdown for **{crop if has_scan else 'your plants'}**:\n\n"
                 f"### 🌞 1. Sunlight Categories\n"
@@ -369,10 +384,10 @@ class PlantHealthAgent:
         # =========================================================================
         # 8. PRUNING, TRIMMING & TOOL HYGIENE
         # =========================================================================
-        elif any(term in q_lower for term in [
-            "prune", "pruning", "trim", "trimming", "cut", "sanitize",
-            "sterilize", "shears", "scissors", "sucker", "disinfect"
-        ]):
+        elif self._contains_keyword(q_lower, 
+            "prune", "pruning", "trim", "trimming", "cut back", "sanitize",
+            "sterilize", "shears", "scissors", "sucker", "suckers", "disinfect"
+        ):
             answer = (
                 f"✂️ **Pruning is surgical plant care—done right, it stops disease dead in its tracks!** Here is how to prune **{crop if has_scan else 'your plants'}** like a pro:\n\n"
                 f"### 🧼 1. Shears Sanitation (Crucial Step)\n"
@@ -395,10 +410,10 @@ class PlantHealthAgent:
         # =========================================================================
         # 9. ORGANIC REMEDIES & HOMEMADE SPRAYS
         # =========================================================================
-        elif any(term in q_lower for term in [
-            "organic", "home remedy", "natural", "baking soda", "neem",
-            "spray at home", "diy", "milk", "tea", "garlic", "peroxide"
-        ]):
+        elif self._contains_keyword(q_lower, 
+            "organic", "home remedy", "baking soda", "neem oil", "neem",
+            "spray recipe", "dish soap", "castile soap", "diy spray", "milk spray", "garlic spray", "hydrogen peroxide"
+        ):
             answer = (
                 f"🌿 **Let's treat this naturally and safely!** Here is a proven organic recipe arsenal for **{disease_name if has_scan else 'plant diseases'}** on **{crop}**:\n\n"
                 f"### 🥣 1. Master Baking Soda Anti-Fungal Foliar Spray\n"
@@ -423,10 +438,10 @@ class PlantHealthAgent:
         # =========================================================================
         # 10. CHEMICAL TREATMENTS & FUNGICIDE ROTATION
         # =========================================================================
-        elif any(term in q_lower for term in [
-            "chemical", "fungicide", "bactericide", "mancozeb", "copper",
-            "chlorothalonil", "medicine", "synthetic", "spray schedule", "dosage", "frac"
-        ]):
+        elif self._contains_keyword(q_lower, 
+            "chemical", "fungicide", "fungicides", "bactericide", "mancozeb", "copper",
+            "chlorothalonil", "synthetic", "spray schedule", "dosage", "frac", "active ingredient"
+        ):
             answer = (
                 f"🧪 **Here is your professional chemical treatment and rotation strategy for {disease_name if has_scan else 'crop diseases'}:**\n\n"
                 f"### 1. Recommended Active Ingredients\n"
@@ -449,10 +464,10 @@ class PlantHealthAgent:
         # =========================================================================
         # 11. EDIBILITY & HARVEST SAFETY
         # =========================================================================
-        elif any(term in q_lower for term in [
-            "eat", "edible", "safe to harvest", "consume", "poisonous",
-            "toxic", "fruit", "harvest", "phi", "pre harvest", "wash"
-        ]):
+        elif self._contains_keyword(q_lower, 
+            "eat", "edible", "safe to eat", "safe to harvest", "consume", "poisonous",
+            "toxic", "harvest", "phi", "pre harvest", "edibility"
+        ):
             if "Healthy" in disease_name:
                 answer = (
                     f"🍅 **Wonderful news! Your harvest is 100% healthy and safe to eat!**\n\n"
@@ -478,10 +493,10 @@ class PlantHealthAgent:
         # =========================================================================
         # 12. CONTAGION, QUARANTINE & CROSS-INFECTION
         # =========================================================================
-        elif any(term in q_lower for term in [
+        elif self._contains_keyword(q_lower, 
             "spread", "contagious", "neighbor", "other plants", "potatoes",
             "tomatoes", "quarantine", "isolate", "cross infection", "distance"
-        ]):
+        ):
             answer = (
                 f"🛑 **Let's protect your garden from spreading!** Here is what you need to know about **{disease_name}** on **{crop}**:\n\n"
                 f"- **Contagion Level:** **{severity}**\n"
@@ -522,27 +537,114 @@ class PlantHealthAgent:
             ]
 
         # =========================================================================
-        # 14. DEFAULT / GENERAL BOTANICAL DIAGNOSIS
+        # 14. BOT TROUBLESHOOTING & STATUS ("Chatbot is not working", "Help")
+        # =========================================================================
+        elif any(term in q_lower for term in [
+            "not working", "broken", "offline", "chatbot is not working", "bot is not working",
+            "doesn't work", "does not work", "error", "troubleshoot", "why is it not working"
+        ]):
+            answer = (
+                f"🌿 **I am online, fully operational, and ready to assist you!**\n\n"
+                f"If you are experiencing any difficulty interacting with the chatbot or scanner, here is a quick troubleshooting checklist:\n\n"
+                f"1. **Backend Server Status:** Make sure the FastAPI server is running (`python run.py`). You can verify at `http://127.0.0.1:8000/health`.\n"
+                f"2. **Active Scan Context:** You can attach an active scan by uploading/scanning a leaf on the **AI Scanner** tab, or ask any general plant question directly here.\n"
+                f"3. **Microphone Voice:** For voice input, click 🎙️ and grant browser microphone permission.\n"
+                f"4. **Preset Questions:** Try clicking any of the question buttons on the left panel or below to see instant answers!"
+            )
+            suggested_follow_ups = [
+                "What questions can I ask about a plant?",
+                "Why are my plant leaves turning yellow?",
+                "How do I make a homemade organic spray?",
+                "How often should I water my plants?"
+            ]
+
+        # =========================================================================
+        # 15. GENERAL PLANT CARE, GROWING & PROPAGATION
+        # =========================================================================
+        elif any(term in q_lower for term in [
+            "how to care", "take care", "how to grow", "planting", "propagate",
+            "propagation", "cuttings", "water cutting", "potting mix", "indoor plant", "shade"
+        ]):
+            answer = (
+                f"🌱 **Here is your essential plant care & growing guide:**\n\n"
+                f"### ☀️ 1. Light & Placement\n"
+                f"- **Fruiting vegetables (Tomatoes, Peppers):** Require 6 to 8 hours of direct sun daily.\n"
+                f"- **Leafy greens & Shade plants:** Thrive in partial sun or bright indirect light.\n\n"
+                f"### 💧 2. Watering Routine\n"
+                f"- Test soil moisture 2 inches deep. Water thoroughly when dry; ensure pots have drainage holes.\n\n"
+                f"### 🌿 3. Propagation & Growth\n"
+                f"- **Stem Cuttings in Water:** Cut a 4-6 inch healthy stem just below a leaf node, strip bottom leaves, and place in clean room-temperature water. Refresh water every 3 days until roots reach 2 inches, then transplant into potting soil.\n"
+                f"- **Potting Mix:** Use a well-draining blend of peat moss/coco coir, perlite, and aged compost."
+            )
+            suggested_follow_ups = [
+                "How often should I water my plants?",
+                "What is a natural fertilizer to boost growth?",
+                "How do I get rid of pests naturally?"
+            ]
+
+        # =========================================================================
+        # 16. SOIL PH & TESTING
+        # =========================================================================
+        elif any(term in q_lower for term in [
+            "soil ph", "acidic", "alkaline", "ph test", "test soil", "lime", "sulfur"
+        ]):
+            answer = (
+                f"🧪 **Soil pH Guide for Healthy Plant Growth:**\n\n"
+                f"### 🎯 Ideal pH Ranges\n"
+                f"- **Most garden vegetables (Tomatoes, Peppers, Corn):** pH 6.0 to 6.8 (slightly acidic).\n"
+                f"- **Acid-loving plants (Blueberries, Azaleas):** pH 4.5 to 5.5.\n\n"
+                f"### 🔬 Easy DIY Home Soil Test\n"
+                f"1. **Test for Alkalinity:** Put 2 tablespoons of soil in a cup and add 1/2 cup of vinegar. If it fizzes/bubbles, your soil is **alkaline** (pH > 7.0).\n"
+                f"2. **Test for Acidity:** Put 2 tablespoons of soil in a cup, add water to make mud, then add 1/2 cup of baking soda. If it fizzes, your soil is **acidic** (pH < 6.0).\n\n"
+                f"### 🛠️ How to Adjust pH\n"
+                f"- **To raise pH (make less acidic):** Add garden agricultural lime or dolomite.\n"
+                f"- **To lower pH (make more acidic):** Add elemental sulfur, peat moss, or aluminum sulfate."
+            )
+            suggested_follow_ups = [
+                "What is a natural fertilizer for vegetables?",
+                "How do I prevent root rot in potted plants?",
+                "Why are my plant leaves turning yellow?"
+            ]
+
+        # =========================================================================
+        # 17. DEFAULT / GENERAL BOTANICAL DIAGNOSIS & CONVERSATION
         # =========================================================================
         else:
-            answer = (
-                f"🩺 **Here is my botanical diagnosis and care prescription for you:**\n\n"
-                f"**Crop & Condition:** {crop} • **{disease_name}**\n"
-                f"**Pathology Classification:** {matched_info.get('category', 'Condition')} (Severity: **{severity}**)\n\n"
-                f"### 🔬 What Is Happening?\n"
-                f"{cause_text}\n\n"
-                f"### 🌿 What You Should Do First:\n"
-                f"1. **Organic Response:** {organic_sol}\n"
-                f"2. **Chemical Option:** {chemical_sol}\n"
-                f"3. **Hygiene Action:** {prevention_list[0] if prevention_list else 'Ensure optimal air circulation and prune damaged foliage.'}\n\n"
-                f"💬 *Feel free to ask me for a DIY spray recipe, watering schedule, edibility safety check, or step-by-step quarantine guide!*"
-            )
-            suggested_follow_ups = matched_info.get("recommended_questions", [
-                "What questions can I ask about a plant?",
-                f"What organic spray can I prepare for {disease_name}?",
-                "Why are my plant leaves turning yellow?",
-                "Is this disease contagious to my other garden plants?"
-            ])
+            if has_scan:
+                answer = (
+                    f"🩺 **Here is my botanical diagnosis and care prescription for you:**\n\n"
+                    f"**Crop & Condition:** {crop} • **{disease_name}**\n"
+                    f"**Pathology Classification:** {matched_info.get('category', 'Condition')} (Severity: **{severity}**)\n\n"
+                    f"### 🔬 What Is Happening?\n"
+                    f"{cause_text}\n\n"
+                    f"### 🌿 What You Should Do First:\n"
+                    f"1. **Organic Response:** {organic_sol}\n"
+                    f"2. **Chemical Option:** {chemical_sol}\n"
+                    f"3. **Hygiene Action:** {prevention_list[0] if prevention_list else 'Ensure optimal air circulation and prune damaged foliage.'}\n\n"
+                    f"💬 *Feel free to ask me for a DIY spray recipe, watering schedule, edibility safety check, or step-by-step quarantine guide!*"
+                )
+                suggested_follow_ups = matched_info.get("recommended_questions", [
+                    "What questions can I ask about a plant?",
+                    f"What organic spray can I prepare for {disease_name}?",
+                    "Why are my plant leaves turning yellow?",
+                    "Is this disease contagious to my other garden plants?"
+                ])
+            else:
+                answer = (
+                    f"🌿 **Thank you for your question! Here is my botanical advice:**\n\n"
+                    f"To keep your plants thriving, healthy, and resistant to common diseases:\n\n"
+                    f"1. **Water Wisely:** Always water at the base of the plant early in the morning so leaves stay dry.\n"
+                    f"2. **Inspect Foliage:** Check leaf undersides regularly for early signs of spots, discoloration, or pests.\n"
+                    f"3. **Ensure Airflow:** Prune crowded branches and maintain spacing between plants.\n"
+                    f"4. **Feed Balanced Nutrition:** Provide organic compost and balanced N-P-K nutrients during active growth.\n\n"
+                    f"💡 *Tip: If you have a specific crop or diseased leaf, upload a photo in the **AI Scanner** tab to get an instant tailored diagnosis!*"
+                )
+                suggested_follow_ups = [
+                    "What questions can I ask about a plant?",
+                    "Why are my plant leaves turning yellow?",
+                    "How do I make a homemade organic spray?",
+                    "How often should I water my plants?"
+                ]
 
         return {
             "answer": answer,

@@ -23,23 +23,29 @@ import uvicorn
 
 
 def main():
+    host = os.environ.get("HOST", "127.0.0.1")
+    port = int(os.environ.get("PORT", 8000))
+    reload = os.environ.get("RELOAD", "false").lower() in ("true", "1", "yes")
+
     print("=" * 65)
     print("PLANTVISION AI - Leaf Disease Detection & Care Solutions")
     print("=" * 65)
-    print("Starting FastAPI backend server...")
-    print("Web Application available at: http://127.0.0.1:8000")
-    print("Interactive API Docs available at: http://127.0.0.1:8000/docs")
+    print(f"Starting FastAPI backend server on {host}:{port}...")
+    print(f"Web Application available at: http://{host}:{port}")
+    print(f"Interactive API Docs available at: http://{host}:{port}/docs")
     print("=" * 65)
 
-    # Automatically open browser
-    try:
-        webbrowser.open("http://127.0.0.1:8000")
-    except Exception:
-        pass
+    # Automatically open browser if running locally
+    if host in ("127.0.0.1", "localhost") and not os.environ.get("NO_BROWSER"):
+        try:
+            webbrowser.open(f"http://{host}:{port}")
+        except Exception:
+            pass
 
     # Run Uvicorn server
-    uvicorn.run("backend.app:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("backend.app:app", host=host, port=port, reload=reload)
 
 
 if __name__ == "__main__":
     main()
+
